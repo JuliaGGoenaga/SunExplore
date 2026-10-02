@@ -1,4 +1,5 @@
 const MONTHS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+const REFERENCE_WINDOW_DIMENSION = 1.5;
 
 function parseCsvRow(line) {
   const values = [];
@@ -125,7 +126,7 @@ function makeShadeTrace(polygon) {
     theta: polygon.theta,
     r: polygon.r,
     fill: "toself",
-    fillcolor: "rgba(23, 107, 89, 0.20)",
+    fillcolor: "rgba(23, 107, 89, 0.28)",
     line: { color: "rgba(23, 107, 89, 0.45)", width: 1 },
     hoverinfo: "skip",
     showlegend: false
@@ -134,6 +135,7 @@ function makeShadeTrace(polygon) {
 
 function makeChartTraces(climate, records, orientation, shadeOptions = {}) {
   const traces = [];
+  const shadeTraces = [];
   for (let month = 1; month <= 12; month += 1) {
     const day21 = climate.records.filter(record => record.month === month && record.day === 21);
     if (day21.length) {
@@ -150,18 +152,16 @@ function makeChartTraces(climate, records, orientation, shadeOptions = {}) {
     }
   }
 
-  traces.unshift(makeShadeTrace(oppositeOrientationPolygon(orientation)));
+  shadeTraces.push(makeShadeTrace(oppositeOrientationPolygon(orientation)));
 
   if (shadeOptions.horizontalEnabled) {
-    const windowHeight = Math.max(Number(shadeOptions.windowHeight) || 1.5, 0.1);
     const overhang = Math.max(Number(shadeOptions.horizontalLength) || 0, 0);
-    const polygon = horizontalShadePolygon(orientation, overhang, windowHeight);
-    if (polygon) traces.unshift(makeShadeTrace(polygon));
+    const polygon = horizontalShadePolygon(orientation, overhang, REFERENCE_WINDOW_DIMENSION);
+    if (polygon) shadeTraces.push(makeShadeTrace(polygon));
   }
   if (shadeOptions.verticalEnabled) {
-    const windowWidth = Math.max(Number(shadeOptions.windowWidth) || 1.5, 0.1);
-    const angle = Math.atan(Math.max(Number(shadeOptions.verticalLength) || 0, 0) / windowWidth) * 180 / Math.PI;
-    if (angle > 0) traces.unshift(makeShadeTrace(verticalShadePolygon(orientation, angle, shadeOptions.verticalSide)));
+    const angle = Math.atan(Math.max(Number(shadeOptions.verticalLength) || 0, 0) / REFERENCE_WINDOW_DIMENSION) * 180 / Math.PI;
+    if (angle > 0) shadeTraces.push(makeShadeTrace(verticalShadePolygon(orientation, angle, shadeOptions.verticalSide)));
   }
 
   traces.push({
@@ -183,6 +183,8 @@ function makeChartTraces(climate, records, orientation, shadeOptions = {}) {
     },
     hovertemplate: "Azimut %{theta:.1f}°<br>Altura %{customdata[0]:.1f}°<br>Temperatura %{customdata[1]:.1f}°C<br>%{customdata[2]:02d}/%{customdata[3]:02d} · hora %{customdata[4]}<extra></extra>"
   });
+
+  traces.push(...shadeTraces);
 
   traces.push({
     type: "scatterpolar",
@@ -233,12 +235,93 @@ function initApp() {
   let climate = null;
   let currentRecords = [];
 
+  const updateShadePreview = () => {
+    const width = Math.max(Number(document.getElementById("window-width").value) || REFERENCE_WINDOW_DIMENSION, 0.1);
+    const height = Math.max(Number(document.getElementById("window-height").value) || REFERENCE_WINDOW_DIMENSION, 0.1);
+    const horizontalLength = Math.max(Number(document.getElementById("horizontal-length").value) || 0, 0);
+    const verticalLength = Math.max(Number(document.getElementById("vertical-length").value) || 0, 0);
+    const wallWidth = Math.max(width + 1, 3.8);
+    const wallHeight = Math.max(height + 1, 3.2);
+    const wallDepth = 0.7;
+    const windowLeft = (wallWidth - width) / 2;
+    const windowBottom = (wallHeight - height) / 2;
+    const horizontalEnabled = document.getElementById("horizontal-enabled").checked;
+    const verticalEnabled = document.getElementById("vertical-enabled").checked;
+    const wallTop = [[0, 0, wallHeight], [wallWidth, 0, wallHeight], [wallWidth, wallDepth, wallHeight], [0, wallDepth, wallHeight]];
+    const wallSide = [[wallWidth, 0, 0], [wallWidth, 0, wallHeight], [wallWidth, wallDepth, wallHeight], [wallWidth, wallDepth, 0]];
+    const wallFront = [[0, 0, 0], [wallWidth, 0, 0], [wallWidth, 0, wallHeight], [0, 0, wallHeight]];
+    const windowPoints = [
+      [windowLeft, 0, windowBottom], [windowLeft + width, 0, windowBottom],
+      [windowLeft + width, 0, windowBottom + height], [windowLeft, 0, windowBottom + height]
+    ];
+    const canopyHeight = windowBottom + height;
+    const horizontalPoints = [
+      [windowLeft - 0.12, 0, canopyHeight], [windowLeft + width + 0.12, 0, canopyHeight],
+      [windowLeft + width + 0.12, horizontalLength, canopyHeight], [windowLeft - 0.12, horizontalLength, canopyHeight]
+    ];
+    const verticalLeft = document.getElementById("vertical-side").value === "left";
+    const finX = verticalLeft ? windowLeft : windowLeft + width;
+    const verticalPoints = [
+      [finX, 0, windowBottom], [finX, verticalLength, windowBottom],
+      [finX, verticalLength, canopyHeight], [finX, 0, canopyHeight]
+    ];
+    const groundPoints = [[-0.4, 0.25, 0], [wallWidth + 0.4, 0.25, 0]];
+    const modelPoints = [...wallTop, ...wallSide, ...wallFront, ...windowPoints, ...groundPoints];
+    if (horizontalEnabled && horizontalLength > 0) modelPoints.push(...horizontalPoints);
+    if (verticalEnabled && verticalLength > 0) modelPoints.push(...verticalPoints);
+
+    const cosine = Math.sqrt(3) / 2;
+    const projected = modelPoints.map(([x, y, z]) => ({ x: cosine * (x - y), y: 0.5 * (x + y) - z }));
+    const minX = Math.min(...projected.map(point => point.x));
+    const maxX = Math.max(...projected.map(point => point.x));
+    const minY = Math.min(...projected.map(point => point.y));
+    const maxY = Math.max(...projected.map(point => point.y));
+    const scale = Math.min(276 / (maxX - minX), 236 / (maxY - minY));
+    const offsetX = (320 - (maxX - minX) * scale) / 2 - minX * scale;
+    const offsetY = (280 - (maxY - minY) * scale) / 2 - minY * scale;
+    const project = (x, y, z) => ({
+      x: offsetX + scale * cosine * (x - y),
+      y: offsetY + scale * (0.5 * (x + y) - z)
+    });
+    const setPolygon = (id, vertices) => {
+      document.getElementById(id).setAttribute("points", vertices.map(([x, y, z]) => {
+        const point = project(x, y, z);
+        return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
+      }).join(" "));
+    };
+    const setLine = (id, start, end) => {
+      const first = project(...start);
+      const second = project(...end);
+      const line = document.getElementById(id);
+      line.setAttribute("x1", first.x.toFixed(1));
+      line.setAttribute("y1", first.y.toFixed(1));
+      line.setAttribute("x2", second.x.toFixed(1));
+      line.setAttribute("y2", second.y.toFixed(1));
+    };
+
+    setPolygon("axon-wall-top", wallTop);
+    setPolygon("axon-wall-side", wallSide);
+    setPolygon("axon-wall-front", wallFront);
+    setPolygon("axon-window", windowPoints);
+    setLine("axon-window-mullion-v", [windowLeft + width / 2, 0, windowBottom], [windowLeft + width / 2, 0, canopyHeight]);
+    setLine("axon-window-mullion-h", [windowLeft, 0, windowBottom + height / 2], [windowLeft + width, 0, windowBottom + height / 2]);
+    setPolygon("axon-horizontal", horizontalPoints);
+    setPolygon("axon-vertical", verticalPoints);
+    document.getElementById("axon-horizontal").style.display = horizontalEnabled && horizontalLength > 0 ? "" : "none";
+    document.getElementById("axon-vertical").style.display = verticalEnabled && verticalLength > 0 ? "" : "none";
+    setLine("axon-ground", groundPoints[0], groundPoints[1]);
+    document.getElementById("horizontal-length-value").textContent = horizontalLength.toFixed(1);
+    document.getElementById("vertical-length-value").textContent = verticalLength.toFixed(1);
+    document.getElementById("preview-dimensions").textContent = `${width.toFixed(1)} × ${height.toFixed(1)} m`;
+  };
+
   const setStatus = (message, isError = false) => {
     status.textContent = message;
     status.classList.toggle("is-error", isError);
   };
 
   const render = () => {
+    updateShadePreview();
     if (!climate) return;
     const orientation = (Number(orientationInput.value) % 360 + 360) % 360;
     const records = visibleRecords(climate, temperatureInput.value);
@@ -246,10 +329,8 @@ function initApp() {
     const shadeOptions = {
       horizontalEnabled: document.getElementById("horizontal-enabled").checked,
       horizontalLength: document.getElementById("horizontal-length").value,
-      windowHeight: document.getElementById("window-height").value,
       verticalEnabled: document.getElementById("vertical-enabled").checked,
       verticalLength: document.getElementById("vertical-length").value,
-      windowWidth: document.getElementById("window-width").value,
       verticalSide: document.getElementById("vertical-side").value
     };
     Plotly.react("solar-chart", makeChartTraces(climate, records, orientation, shadeOptions), chartLayout(), { responsive: true, displaylogo: false, modeBarButtonsToRemove: ["lasso2d", "select2d"] });
@@ -290,6 +371,7 @@ function initApp() {
   orientationInput.addEventListener("input", render);
   temperatureInput.addEventListener("input", render);
   shadeInputs.forEach(input => input.addEventListener("input", render));
+  document.getElementById("vertical-side").addEventListener("change", render);
   filePicker.addEventListener("dragover", event => { event.preventDefault(); filePicker.classList.add("is-dragging"); });
   filePicker.addEventListener("dragleave", () => filePicker.classList.remove("is-dragging"));
   filePicker.addEventListener("drop", event => {
@@ -307,6 +389,7 @@ function initApp() {
     URL.revokeObjectURL(url);
   });
   downloadPng.addEventListener("click", () => Plotly.downloadImage("solar-chart", { format: "png", filename: "carta-solar", width: 1200, height: 900, scale: 2 }));
+  updateShadePreview();
   Plotly.newPlot("solar-chart", [{ type: "scatterpolar", mode: "markers", theta: [], r: [] }], chartLayout(), { responsive: true, displayModeBar: false, staticPlot: true });
 }
 
