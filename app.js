@@ -108,6 +108,16 @@ function verticalShadePolygon(orientation, angle, side) {
   };
 }
 
+function oppositeOrientationPolygon(orientation) {
+  const start = (orientation + 90) % 360;
+  const end = (orientation + 270) % 360;
+  const arc = Array.from({ length: 181 }, (_, index) => start + index);
+  return {
+    theta: [start, ...arc, end].map(value => (value % 360 + 360) % 360),
+    r: [0, ...Array(181).fill(90), 0]
+  };
+}
+
 function makeShadeTrace(polygon) {
   return {
     type: "scatterpolar",
@@ -139,6 +149,8 @@ function makeChartTraces(climate, records, orientation, shadeOptions = {}) {
       });
     }
   }
+
+  traces.unshift(makeShadeTrace(oppositeOrientationPolygon(orientation)));
 
   if (shadeOptions.horizontalEnabled) {
     const windowHeight = Math.max(Number(shadeOptions.windowHeight) || 1.5, 0.1);
