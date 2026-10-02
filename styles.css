@@ -130,16 +130,13 @@ h1 span { color: var(--green); }
 .axonometric-panel { min-width: 0; padding: 24px 20px 20px; border-right: 1px solid var(--line); }
 .axonometric-panel .chart-heading { align-items: center; }
 .axonometric-panel .chart-heading h2 { font-size: 16px; }
-.axonometric-panel .chart-heading output { color: var(--ink); font-family: var(--mono); font-size: 9px; white-space: nowrap; }
-#shade-axonometric { display: block; width: 100%; height: auto; margin-top: 18px; overflow: visible; background: #f7faf8; border: 1px solid var(--line); }
-.axon-wall-top { fill: #e9efec; stroke: #bdcbc5; stroke-width: 1; }
-.axon-wall-side { fill: #dce5e1; stroke: #bdcbc5; stroke-width: 1; }
-.axon-wall-front { fill: #f1f5f2; stroke: #bdcbc5; stroke-width: 1; }
-.axon-window { fill: #d7e9e8; stroke: #547b78; stroke-width: 1.5; }
-.axon-mullion { stroke: #fff; stroke-width: 1.5; }
-.axon-shade { fill: #cfed70; stroke: #176b59; stroke-width: 1.5; }
-.axon-shade-face { fill: #b6d651; stroke: #176b59; stroke-width: 1.5; }
-.axon-ground { stroke: #bdcbc5; stroke-width: 1; }
+.model-actions { display: flex; align-items: center; gap: 8px; }
+.model-actions output { color: var(--ink); font-family: var(--mono); font-size: 9px; white-space: nowrap; }
+.icon-button { width: 30px; height: 30px; display: inline-grid; place-items: center; flex: 0 0 auto; border: 1px solid var(--line); background: var(--white); color: var(--ink); cursor: pointer; font-size: 18px; line-height: 1; }
+.icon-button:hover { border-color: var(--green); color: var(--green); }
+.icon-button:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+#shade-axonometric { display: block; width: 100%; aspect-ratio: 1.14; min-height: 220px; margin-top: 18px; overflow: hidden; border: 1px solid var(--line); background: #f7faf8; touch-action: none; }
+#shade-axonometric canvas { display: block; width: 100%; height: 100%; }
 .button { min-height: 39px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; cursor: pointer; font-size: 11px; font-weight: 700; transition: background .18s, border-color .18s; }
 .button span { font-size: 16px; line-height: 1; }
 .button:disabled { cursor: not-allowed; opacity: .45; }
