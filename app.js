@@ -242,30 +242,30 @@ function initApp() {
     const verticalLength = Math.max(Number(document.getElementById("vertical-length").value) || 0, 0);
     const wallWidth = Math.max(width + 1, 3.8);
     const wallHeight = Math.max(height + 1, 3.2);
-    const wallDepth = 0.18;
+    const wallDepth = 0.25;
     const windowLeft = (wallWidth - width) / 2;
     const windowBottom = (wallHeight - height) / 2;
     const horizontalEnabled = document.getElementById("horizontal-enabled").checked;
     const verticalEnabled = document.getElementById("vertical-enabled").checked;
     const wallTop = [[0, 0, wallHeight], [wallWidth, 0, wallHeight], [wallWidth, wallDepth, wallHeight], [0, wallDepth, wallHeight]];
     const wallSide = [[wallWidth, 0, 0], [wallWidth, 0, wallHeight], [wallWidth, wallDepth, wallHeight], [wallWidth, wallDepth, 0]];
-    const wallFront = [[0, 0, 0], [wallWidth, 0, 0], [wallWidth, 0, wallHeight], [0, 0, wallHeight]];
+    const wallFront = [[0, wallDepth, 0], [wallWidth, wallDepth, 0], [wallWidth, wallDepth, wallHeight], [0, wallDepth, wallHeight]];
     const windowPoints = [
       [windowLeft, 0, windowBottom], [windowLeft + width, 0, windowBottom],
       [windowLeft + width, 0, windowBottom + height], [windowLeft, 0, windowBottom + height]
     ];
     const canopyHeight = windowBottom + height;
     const horizontalPoints = [
-      [windowLeft - 0.12, 0, canopyHeight], [windowLeft + width + 0.12, 0, canopyHeight],
-      [windowLeft + width + 0.12, horizontalLength, canopyHeight], [windowLeft - 0.12, horizontalLength, canopyHeight]
+      [windowLeft - 0.12, wallDepth, canopyHeight], [windowLeft + width + 0.12, wallDepth, canopyHeight],
+      [windowLeft + width + 0.12, wallDepth + horizontalLength, canopyHeight], [windowLeft - 0.12, wallDepth + horizontalLength, canopyHeight]
     ];
     const verticalLeft = document.getElementById("vertical-side").value === "left";
     const finX = verticalLeft ? windowLeft : windowLeft + width;
     const verticalPoints = [
-      [finX, 0, windowBottom], [finX, verticalLength, windowBottom],
-      [finX, verticalLength, canopyHeight], [finX, 0, canopyHeight]
+      [finX, wallDepth, windowBottom], [finX, wallDepth + verticalLength, windowBottom],
+      [finX, wallDepth + verticalLength, canopyHeight], [finX, wallDepth, canopyHeight]
     ];
-    const groundPoints = [[-0.15, 0, -0.04], [wallWidth + 0.15, 0, -0.04]];
+    const groundPoints = [[-0.15, wallDepth, -0.04], [wallWidth + 0.15, wallDepth, -0.04]];
     const modelPoints = [...wallTop, ...wallSide, ...wallFront, ...windowPoints, ...groundPoints];
     if (horizontalEnabled && horizontalLength > 0) modelPoints.push(...horizontalPoints);
     if (verticalEnabled && verticalLength > 0) modelPoints.push(...verticalPoints);
@@ -308,8 +308,10 @@ function initApp() {
     setPolygon("axon-horizontal", horizontalPoints);
     setPolygon("axon-vertical", verticalPoints);
     document.getElementById("axon-horizontal").style.display = horizontalEnabled && horizontalLength > 0 ? "" : "none";
-    document.getElementById("axon-vertical").style.display = verticalEnabled && verticalLength > 0 ? "" : "none";
+    const vertical = document.getElementById("axon-vertical");
+    vertical.style.display = verticalEnabled && verticalLength > 0 ? "" : "none";
     setLine("axon-ground", groundPoints[0], groundPoints[1]);
+    document.getElementById("axon-horizontal").parentNode.appendChild(document.getElementById("axon-horizontal"));
     document.getElementById("horizontal-length-value").textContent = horizontalLength.toFixed(1);
     document.getElementById("vertical-length-value").textContent = verticalLength.toFixed(1);
     document.getElementById("preview-dimensions").textContent = `${width.toFixed(1)} × ${height.toFixed(1)} m`;
