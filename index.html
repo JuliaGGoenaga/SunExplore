@@ -22,19 +22,11 @@
   </header>
 
   <main>
-    <section class="intro" aria-labelledby="page-title">
-      <div>
-        <p class="eyebrow">ANÁLISIS DE ASOLEAMIENTO</p>
-        <h1 id="page-title">Una carta solar,<br><span>desde tu clima.</span></h1>
-      </div>
-      <p class="intro-copy">Carga un archivo meteorológico EPW para explorar la trayectoria solar y su temperatura asociada. El análisis se realiza en este navegador.</p>
-    </section>
-
-    <section class="workspace" aria-label="Herramienta de carta solar">
-      <div class="controls">
+    <section class="controls-strip" aria-label="Parámetros de la carta solar">
+      <div class="strip-section file-control">
         <div class="control-heading">
           <span class="step">01</span>
-          <h2>Archivo climático</h2>
+          <h2>Archivo EPW</h2>
         </div>
         <label class="file-picker" for="epw-file">
           <span class="upload-icon" aria-hidden="true">↑</span>
@@ -42,45 +34,49 @@
           <span class="browse-label">EXPLORAR</span>
         </label>
         <input id="epw-file" type="file" accept=".epw,text/plain" hidden>
-
         <div id="location" class="location" aria-live="polite">
           <span class="location-dot"></span>
           <span id="location-name">Sin archivo cargado</span>
         </div>
+      </div>
 
-        <div class="control-heading parameters-heading">
+      <div class="strip-section parameter-control">
+        <div class="control-heading">
           <span class="step">02</span>
           <h2>Parámetros</h2>
         </div>
-        <label class="field-label" for="orientation">Orientación de fachada <span>AZIMUT</span></label>
-        <div class="input-unit">
-          <input id="orientation" type="number" min="0" max="359" step="1" value="180" disabled>
-          <span>°</span>
+        <div class="parameter-fields">
+          <label class="compact-field" for="orientation">Orientación <span>AZIMUT</span>
+            <span class="input-unit"><input id="orientation" type="number" min="0" max="359" step="1" value="180" disabled><span>°</span></span>
+          </label>
+          <label class="compact-field" for="min-temperature">Temperatura mínima <span>FILTRO</span>
+            <span class="input-unit"><input id="min-temperature" type="number" min="-50" max="60" step="1" placeholder="Sin filtro" disabled><span>°C</span></span>
+          </label>
         </div>
-        <p class="field-help">0° norte · 90° este · 180° sur · 270° oeste</p>
+        <p class="parameter-help">0° N · 90° E · 180° S · 270° O</p>
+      </div>
 
-        <label class="field-label threshold-label" for="min-temperature">Temperatura mínima <span>FILTRO</span></label>
-        <div class="input-unit">
-          <input id="min-temperature" type="number" min="-50" max="60" step="1" placeholder="Sin filtro" disabled>
-          <span>°C</span>
+      <div class="strip-section protection-control">
+        <div class="control-heading">
+          <span class="step">03</span>
+          <h2>Protección solar</h2>
         </div>
-        <p class="field-help">Deja vacío para mostrar todas las horas de sol.</p>
-
-        <details class="shade-settings">
-          <summary>Protección solar <span>VOLADIZOS</span></summary>
-          <div class="shade-control">
+        <div class="protection-grid">
+          <div class="protection-group">
             <label class="shade-toggle"><input id="horizontal-enabled" type="checkbox" disabled> Horizontal</label>
-            <label class="shade-field">Vuelo <span>m</span><input id="horizontal-length" type="number" min="0" max="5" step="0.1" value="0" disabled></label>
+            <label class="shade-field">Vuelo <span><output id="horizontal-length-value">0.0</output> m</span><input id="horizontal-length" class="shade-range" type="range" min="0" max="5" step="0.1" value="0" disabled></label>
             <label class="shade-field">Altura ventana <span>m</span><input id="window-height" type="number" min="0.1" max="5" step="0.1" value="1.5" disabled></label>
           </div>
-          <div class="shade-control">
+          <div class="protection-group">
             <label class="shade-toggle"><input id="vertical-enabled" type="checkbox" disabled> Vertical</label>
-            <label class="shade-field">Lama <span>m</span><input id="vertical-length" type="number" min="0" max="5" step="0.1" value="0" disabled></label>
+            <label class="shade-field">Lama <span><output id="vertical-length-value">0.0</output> m</span><input id="vertical-length" class="shade-range" type="range" min="0" max="5" step="0.1" value="0" disabled></label>
             <label class="shade-field">Ancho ventana <span>m</span><input id="window-width" type="number" min="0.1" max="5" step="0.1" value="1.5" disabled></label>
             <label class="shade-field">Lado <select id="vertical-side" disabled><option value="right">Derecha</option><option value="left">Izquierda</option></select></label>
           </div>
-        </details>
-
+        </div>
+      </div>
+      <div class="strip-actions">
+        <p id="status" class="status" role="status" aria-live="polite">Carga un EPW para generar la carta.</p>
         <div class="button-row">
           <button id="download-csv" class="button button-secondary" type="button" disabled title="Descargar datos visibles en CSV">
             <span aria-hidden="true">↓</span> CSV
@@ -89,10 +85,32 @@
             <span aria-hidden="true">↗</span> PNG
           </button>
         </div>
-        <p id="status" class="status" role="status" aria-live="polite">Carga un EPW para generar la carta.</p>
       </div>
+    </section>
 
-      <div class="chart-panel">
+    <section class="visual-workspace" aria-label="Modelo y carta solar">
+      <aside class="axonometric-panel" aria-labelledby="axon-title">
+        <div class="chart-heading">
+          <div>
+            <p class="eyebrow">PROTECCIÓN SOLAR</p>
+            <h2 id="axon-title">Vista isométrica</h2>
+          </div>
+          <output id="preview-dimensions">1.5 × 1.5 m</output>
+        </div>
+        <svg id="shade-axonometric" viewBox="0 0 320 280" role="img" aria-label="Vista isométrica de una ventana con protecciones solares">
+          <polygon id="axon-wall-top" class="axon-wall-top" points=""></polygon>
+          <polygon id="axon-wall-side" class="axon-wall-side" points=""></polygon>
+          <polygon id="axon-wall-front" class="axon-wall-front" points=""></polygon>
+          <polygon id="axon-window" class="axon-window" points=""></polygon>
+          <line id="axon-window-mullion-v" class="axon-mullion" x1="0" y1="0" x2="0" y2="0"></line>
+          <line id="axon-window-mullion-h" class="axon-mullion" x1="0" y1="0" x2="0" y2="0"></line>
+          <polygon id="axon-horizontal" class="axon-shade" points=""></polygon>
+          <polygon id="axon-vertical" class="axon-shade" points=""></polygon>
+          <line id="axon-ground" class="axon-ground" x1="0" y1="0" x2="0" y2="0"></line>
+        </svg>
+      </aside>
+
+      <section class="chart-panel" aria-labelledby="chart-title">
         <div class="chart-heading">
           <div>
             <p class="eyebrow">HEMISFERIO CELESTE</p>
@@ -105,7 +123,7 @@
           <span id="record-count">0 horas de sol</span>
           <span>ALTURA SOLAR <span class="mono">0° — 90°</span></span>
         </div>
-      </div>
+      </section>
     </section>
 
     <footer class="page-footer">
