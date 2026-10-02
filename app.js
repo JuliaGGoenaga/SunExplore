@@ -161,7 +161,8 @@ function makeChartTraces(climate, records, orientation, shadeOptions = {}) {
   }
   if (shadeOptions.verticalEnabled) {
     const angle = Math.atan(Math.max(Number(shadeOptions.verticalLength) || 0, 0) / REFERENCE_WINDOW_DIMENSION) * 180 / Math.PI;
-    if (angle > 0) shadeTraces.push(makeShadeTrace(verticalShadePolygon(orientation, angle, shadeOptions.verticalSide)));
+    const chartSide = shadeOptions.verticalSide === "left" ? "right" : "left";
+    if (angle > 0) shadeTraces.push(makeShadeTrace(verticalShadePolygon(orientation, angle, chartSide)));
   }
 
   traces.push({
