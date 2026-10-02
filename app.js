@@ -242,7 +242,7 @@ function initApp() {
     const verticalLength = Math.max(Number(document.getElementById("vertical-length").value) || 0, 0);
     const wallWidth = Math.max(width + 1, 3.8);
     const wallHeight = Math.max(height + 1, 3.2);
-    const wallDepth = 0.7;
+    const wallDepth = 0.18;
     const windowLeft = (wallWidth - width) / 2;
     const windowBottom = (wallHeight - height) / 2;
     const horizontalEnabled = document.getElementById("horizontal-enabled").checked;
@@ -265,7 +265,7 @@ function initApp() {
       [finX, 0, windowBottom], [finX, verticalLength, windowBottom],
       [finX, verticalLength, canopyHeight], [finX, 0, canopyHeight]
     ];
-    const groundPoints = [[-0.4, 0.25, 0], [wallWidth + 0.4, 0.25, 0]];
+    const groundPoints = [[-0.15, 0, -0.04], [wallWidth + 0.15, 0, -0.04]];
     const modelPoints = [...wallTop, ...wallSide, ...wallFront, ...windowPoints, ...groundPoints];
     if (horizontalEnabled && horizontalLength > 0) modelPoints.push(...horizontalPoints);
     if (verticalEnabled && verticalLength > 0) modelPoints.push(...verticalPoints);
