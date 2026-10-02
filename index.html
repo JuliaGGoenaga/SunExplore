@@ -9,7 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script defer src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script defer src="axonometric.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -95,19 +98,12 @@
             <p class="eyebrow">PROTECCIÓN SOLAR</p>
             <h2 id="axon-title">Vista isométrica</h2>
           </div>
-          <output id="preview-dimensions">1.5 × 1.5 m</output>
+          <div class="model-actions">
+            <output id="preview-dimensions">1.5 × 1.5 m</output>
+            <button id="reset-axon-view" class="icon-button" type="button" aria-label="Restablecer vista 3D" title="Restablecer vista">↻</button>
+          </div>
         </div>
-        <svg id="shade-axonometric" viewBox="0 0 320 280" role="img" aria-label="Vista isométrica de una ventana con protecciones solares">
-          <polygon id="axon-wall-top" class="axon-wall-top" points=""></polygon>
-          <polygon id="axon-wall-side" class="axon-wall-side" points=""></polygon>
-          <polygon id="axon-wall-front" class="axon-wall-front" points=""></polygon>
-          <polygon id="axon-window" class="axon-window" points=""></polygon>
-          <line id="axon-window-mullion-v" class="axon-mullion" x1="0" y1="0" x2="0" y2="0"></line>
-          <line id="axon-window-mullion-h" class="axon-mullion" x1="0" y1="0" x2="0" y2="0"></line>
-          <polygon id="axon-horizontal" class="axon-shade" points=""></polygon>
-          <polygon id="axon-vertical" class="axon-shade" points=""></polygon>
-          <line id="axon-ground" class="axon-ground" x1="0" y1="0" x2="0" y2="0"></line>
-        </svg>
+        <div id="shade-axonometric" class="shade-canvas" role="application" aria-label="Modelo 3D interactivo de una ventana y sus protecciones"></div>
       </aside>
 
       <section class="chart-panel" aria-labelledby="chart-title">
